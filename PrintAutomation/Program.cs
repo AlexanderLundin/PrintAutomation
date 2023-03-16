@@ -103,7 +103,6 @@ namespace PrintAutomation
                     var attachmentData = attachment.Data;
                     // process attachment data...
                     SavePdfToDisk(filename, attachmentData);
-                    //PdfiumViewerPrintPDFFile(filename, "HPAB4538 (HP DeskJet 3700 series)");
                     PrintPDF("HPAB4538 (HP DeskJet 3700 series)", "Letter", filename);
                     MarkMessageAsRead(service, message);
                 }
@@ -132,39 +131,6 @@ namespace PrintAutomation
             using (FileStream stream = new FileStream(filename, FileMode.Create, FileAccess.Write))
             {
                 stream.Write(convertedByteArray, 0, convertedByteArray.Length);
-            }
-        }
-        public static void PdfiumViewerPrintPDFFile(string filePath, string printerName)
-        {
-            using (var document = PdfiumViewer.PdfDocument.Load(filePath))
-            {
-                // Create a print job
-                var printJob = new PrintDocument();
-                printJob.PrinterSettings.PrinterName = printerName;
-
-                // Set the print options
-                printJob.DefaultPageSettings.Landscape = false;
-                printJob.DefaultPageSettings.PaperSize = new PaperSize("Letter", 850, 1100);
-                printJob.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
-
-                // Set the print event handler
-                printJob.PrintPage += (sender, args) =>
-                {
-                    using (var graphics = args.Graphics)
-                    {
-                        // Get the page image
-                        var pageImage = document.Render(args.PageSettings.PrinterSettings.FromPage - 1, args.PageBounds.Width, args.PageBounds.Height, 96, 96, PdfRenderFlags.Annotations);
-
-                        // Draw the page image on the print document
-                        graphics.DrawImage(pageImage, args.PageBounds);
-                    }
-
-                    // Set the page count
-                    args.HasMorePages = args.PageSettings.PrinterSettings.FromPage < args.PageSettings.PrinterSettings.ToPage;
-                };
-
-                // Start the print job
-                printJob.Print();
             }
         }
 
@@ -213,34 +179,6 @@ namespace PrintAutomation
             {
                 return false;
             }
-        }
-
-        private static void PrintDataAsPdf(GmailService service, Message message, string filename)
-        {
-
-            // Set up the print document
-            PrintDocument printDoc = new PrintDocument();
-            printDoc.DocumentName = filename;
-            printDoc.PrinterSettings.PrinterName = "HPAB4538 (HP DeskJet 3700 series)";
-            printDoc.PrinterSettings.PrintToFile = false;
-            printDoc.PrinterSettings.Copies = 1;
-            printDoc.DefaultPageSettings.Color = false;
-            printDoc.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
-            printDoc.DefaultPageSettings.PaperSize = new PaperSize("Letter", 850, 1100);
-
-            // Set the printer settings explicitly
-            printDoc.PrinterSettings.DefaultPageSettings.PrinterResolution.Kind = PrinterResolutionKind.High;
-            printDoc.PrinterSettings.DefaultPageSettings.Color = false;
-            printDoc.PrinterSettings.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
-            printDoc.PrinterSettings.DefaultPageSettings.PaperSize = new PaperSize("Letter", 850, 1100);
-            printDoc.PrinterSettings.DefaultPageSettings.Landscape = false;
-            printDoc.PrinterSettings.DefaultPageSettings.PrinterSettings.Duplex = Duplex.Simplex;
-
-            // Print the PDF file
-            printDoc.PrinterSettings.PrintFileName = filename;
-            printDoc.Print();
-
-            
         }
 
         private static void MarkMessageAsRead(GmailService service, Message message)
