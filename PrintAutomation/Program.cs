@@ -133,9 +133,20 @@ namespace PrintAutomation
             // Set up the print document
             PrintDocument printDoc = new PrintDocument();
             printDoc.PrinterSettings.PrinterName = "HPAB4538 (HP DeskJet 3700 series)";
+            printDoc.PrinterSettings.PrintToFile = false;
             printDoc.PrinterSettings.Copies = 1;
             printDoc.DefaultPageSettings.Color = false;
+            printDoc.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
             printDoc.DefaultPageSettings.PaperSize = new PaperSize("Letter", 850, 1100);
+
+            // Set the printer settings explicitly
+            printDoc.PrinterSettings.DefaultPageSettings.PrinterResolution.Kind = PrinterResolutionKind.High;
+            printDoc.PrinterSettings.DefaultPageSettings.Color = false;
+            printDoc.PrinterSettings.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+            printDoc.PrinterSettings.DefaultPageSettings.PaperSize = new PaperSize("Letter", 850, 1100);
+            printDoc.PrinterSettings.DefaultPageSettings.Landscape = false;
+            printDoc.PrinterSettings.DefaultPageSettings.PrinterSettings.Duplex = Duplex.Simplex;
+
 
             // Print the PDF file
             printDoc.PrinterSettings.PrintFileName = filename;
