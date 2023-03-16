@@ -103,7 +103,8 @@ namespace PrintAutomation
                     var attachmentData = attachment.Data;
                     // process attachment data...
                     SavePdfToDisk(filename, attachmentData);
-                    PdfiumViewerPrintPDFFile(filename, "HPAB4538 (HP DeskJet 3700 series)");
+                    //PdfiumViewerPrintPDFFile(filename, "HPAB4538 (HP DeskJet 3700 series)");
+                    PrintPDF("HPAB4538 (HP DeskJet 3700 series)", "Letter", filename);
                     MarkMessageAsRead(service, message);
                 }
                 else if (part.Filename != null && part.Body.Data != null)
@@ -164,6 +165,53 @@ namespace PrintAutomation
 
                 // Start the print job
                 printJob.Print();
+            }
+        }
+
+        public static bool PrintPDF(string printer, string paperName, string filename)
+        {
+            try
+            {
+                // Create the printer settings for our printer
+                var printerSettings = new PrinterSettings
+                {
+                    PrinterName = printer,
+                    Copies = 1,
+                };
+                // Create our page settings for the paper size selected
+                var pageSettings = new PageSettings(printerSettings)
+
+
+                {
+                    Margins = new Margins(0, 0, 0, 0),
+                };
+                foreach (PaperSize papersize in printerSettings.PaperSizes)
+                {
+                    if (papersize.PaperName == paperName)
+                    {
+                        pageSettings.PaperSize = papersize;
+                        break;
+                    }
+                }
+
+
+                // Now print the PDF document
+                using (var document = PdfDocument.Load(filename))
+                {
+                    using (var printDocument = document.CreatePrintDocument())
+                    {
+                        printDocument.PrinterSettings = printerSettings;
+                        printDocument.DefaultPageSettings = pageSettings;
+                        printDocument.OriginAtMargins = true;
+
+                        printDocument.Print();
+                    }
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
