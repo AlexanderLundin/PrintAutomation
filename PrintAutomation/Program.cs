@@ -52,23 +52,18 @@ namespace PrintAutomation
             UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
             //build query
             var query = new List<string>();
-            //query.Add("is:unread");
+            query.Add("is:unread");
             query.Add("subject:\"print\"");
             query.Add("has:attachment filename:pdf");
             string q = string.Join(" ", query);
             request.Q = q;
             request.MaxResults = 10;
 
-            while (true)
+            // Retrieve the emails matching the query
+            ListMessagesResponse response = request.Execute();
+            if (response != null && response.Messages != null)
             {
-                //sleep 10 seconds
-                System.Threading.Thread.Sleep(10000);
-                // Retrieve the emails matching the query
-                ListMessagesResponse response = request.Execute();
-                if (response != null && response.Messages != null)
-                {
-                    ProcessEmails(service, response);
-                }
+                ProcessEmails(service, response);
             }
 
         }
