@@ -16,7 +16,6 @@ using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using PdfiumViewer;
-using PdfSharp.Pdf;
 
 namespace PrintAutomation
 {
