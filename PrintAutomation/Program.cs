@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Drawing.Printing;
 using System.IO;
 using System.Linq;
@@ -8,11 +9,14 @@ using System.Printing;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
+using PdfiumViewer;
+using PdfSharp.Pdf;
 
 namespace PrintAutomation
 {
@@ -99,8 +103,9 @@ namespace PrintAutomation
                     var attachment = service.Users.Messages.Attachments.Get("me", message.Id, part.Body.AttachmentId).Execute();
                     var attachmentData = attachment.Data;
                     // process attachment data...
-                    PrintDataAsPdf(service, message, filename, attachmentData);
-
+                    SavePdfToDisk(filename, attachmentData);
+                    PdfiumViewerPrintPDFFile(filename, "HPAB4538 (HP DeskJet 3700 series)");
+                    MarkMessageAsRead(service, message);
                 }
                 else if (part.Filename != null && part.Body.Data != null)
                 {
@@ -118,20 +123,57 @@ namespace PrintAutomation
             }
         }
 
-        private static void PrintDataAsPdf(GmailService service, Message message, string filename, string attachmentData)
+        public static void SavePdfToDisk(string filename, string attachmentData)
         {
             // Convert the attachment data from base64url to byte array
             byte[] convertedByteArray = Convert.FromBase64String(attachmentData.Replace('-', '+').Replace('_', '/'));
-
 
             // Save the PDF attachment to disk
             using (FileStream stream = new FileStream(filename, FileMode.Create, FileAccess.Write))
             {
                 stream.Write(convertedByteArray, 0, convertedByteArray.Length);
             }
+        }
+        public static void PdfiumViewerPrintPDFFile(string filePath, string printerName)
+        {
+            using (var document = PdfiumViewer.PdfDocument.Load(filePath))
+            {
+                // Create a print job
+                var printJob = new PrintDocument();
+                printJob.PrinterSettings.PrinterName = printerName;
+
+                // Set the print options
+                printJob.DefaultPageSettings.Landscape = false;
+                printJob.DefaultPageSettings.PaperSize = new PaperSize("Letter", 850, 1100);
+                printJob.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+
+                // Set the print event handler
+                printJob.PrintPage += (sender, args) =>
+                {
+                    using (var graphics = args.Graphics)
+                    {
+                        // Get the page image
+                        var pageImage = document.Render(args.PageSettings.PrinterSettings.FromPage - 1, args.PageBounds.Width, args.PageBounds.Height, 96, 96, PdfRenderFlags.Annotations);
+
+                        // Draw the page image on the print document
+                        graphics.DrawImage(pageImage, args.PageBounds);
+                    }
+
+                    // Set the page count
+                    args.HasMorePages = args.PageSettings.PrinterSettings.FromPage < args.PageSettings.PrinterSettings.ToPage;
+                };
+
+                // Start the print job
+                printJob.Print();
+            }
+        }
+
+        private static void PrintDataAsPdf(GmailService service, Message message, string filename)
+        {
 
             // Set up the print document
             PrintDocument printDoc = new PrintDocument();
+            printDoc.DocumentName = filename;
             printDoc.PrinterSettings.PrinterName = "HPAB4538 (HP DeskJet 3700 series)";
             printDoc.PrinterSettings.PrintToFile = false;
             printDoc.PrinterSettings.Copies = 1;
@@ -147,12 +189,15 @@ namespace PrintAutomation
             printDoc.PrinterSettings.DefaultPageSettings.Landscape = false;
             printDoc.PrinterSettings.DefaultPageSettings.PrinterSettings.Duplex = Duplex.Simplex;
 
-
             // Print the PDF file
             printDoc.PrinterSettings.PrintFileName = filename;
             printDoc.Print();
 
+            
+        }
 
+        private static void MarkMessageAsRead(GmailService service, Message message)
+        {
             // Modify the message label to mark it as read
             var mods = new ModifyMessageRequest();
             mods.RemoveLabelIds = new List<string>() { "UNREAD" };
