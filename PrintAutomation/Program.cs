@@ -27,26 +27,7 @@ namespace PrintAutomation
 
         static async Task Main(string[] args)
         {
-            UserCredential credential;
-
-            // Create or load the user credentials file
-            using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
-            {
-                string credPath = "token.json";
-                credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                    GoogleClientSecrets.FromStream(stream).Secrets,
-                    Scopes,
-                    "user",
-                    CancellationToken.None,
-                    new FileDataStore(credPath, true));
-            }
-
-            // Create the Gmail API service
-            var service = new GmailService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = ApplicationName,
-            });
+            GmailService service = await GetNewTokenWithUserInput();
 
             // Set up the query parameters to search for PDF attachments
             UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
@@ -66,6 +47,34 @@ namespace PrintAutomation
                 ProcessEmails(service, response);
             }
 
+        }
+
+        private static async Task<GmailService> GetNewTokenWithUserInput()
+        {
+            UserCredential credential;
+
+            // Create or load the user credentials file
+            using (var stream = new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
+            {
+                string credPath = "token.json";
+                credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                    GoogleClientSecrets.FromStream(stream).Secrets,
+                    Scopes,
+                    "user",
+                    CancellationToken.None,
+                    new FileDataStore(credPath, true));
+            }
+
+            if (credential.Token.IsExpired(credential.Flow.Clock))
+                await credential.RefreshTokenAsync(CancellationToken.None);
+
+            // Create the Gmail API service
+            var service = new GmailService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = ApplicationName,
+            });
+            return service;
         }
 
         private static void ProcessEmails(GmailService service, ListMessagesResponse response)
