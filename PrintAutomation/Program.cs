@@ -9,6 +9,7 @@ using System.Printing;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Documents;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
@@ -27,6 +28,8 @@ namespace PrintAutomation
 
         static async Task Main(string[] args)
         {
+            //MessageBox.Show("main started");
+
             GmailService service = await GetNewTokenWithUserInput();
 
             // Set up the query parameters to search for PDF attachments
@@ -65,8 +68,12 @@ namespace PrintAutomation
                     new FileDataStore(credPath, true));
             }
 
-            if (credential.Token.IsExpired(credential.Flow.Clock))
+            //always refresh the auth
+            if (true)
+            {
                 await credential.RefreshTokenAsync(CancellationToken.None);
+            }
+                
 
             // Create the Gmail API service
             var service = new GmailService(new BaseClientService.Initializer()
