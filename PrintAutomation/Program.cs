@@ -54,6 +54,7 @@ namespace PrintAutomation
                 ListMessagesResponse response = request.Execute();
                 if (response != null && response.Messages != null)
                 {
+                    log.Write("found emails to print.");
                     ProcessEmails(service, response);
                 }
                 log.Write("Program completed.");
@@ -78,6 +79,11 @@ namespace PrintAutomation
                     "user",
                     CancellationToken.None,
                     new FileDataStore(credPath, true));
+            }
+
+            if (credential.Token.IsExpired(credential.Flow.Clock))
+            {
+                log.Write("credential expired, delete token.json and run again to get new token (requires user input).");
             }
 
             //always refresh the auth
@@ -121,12 +127,16 @@ namespace PrintAutomation
             {
                 if (part.Filename != null && part.Body.AttachmentId != null)
                 {
+                    log.Write("Pdf: " + filename);
                     // This is a regular attachment
                     var attachment = service.Users.Messages.Attachments.Get("me", message.Id, part.Body.AttachmentId).Execute();
                     var attachmentData = attachment.Data;
                     // process attachment data...
+                    log.Write("saving pdf to disk...");
                     SavePdfToDisk(filename, attachmentData);
+                    log.Write("printing to pdf...");
                     PrintPDF("HPAB4538 (HP DeskJet 3700 series)", "Letter", filename);
+                    log.Write("marking email as read...");
                     MarkMessageAsRead(service, message);
                 }
                 else if (part.Filename != null && part.Body.Data != null)
