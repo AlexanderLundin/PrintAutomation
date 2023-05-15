@@ -133,7 +133,8 @@ namespace PrintAutomation
                     var attachmentData = attachment.Data;
                     // process attachment data...
                     log.Write("saving pdf to disk...");
-                    SavePdfToDisk(filename, attachmentData);
+                    filename = SavePdfToDisk(filename, attachmentData);
+                    log.Write("Pdf saved as: " + filename);
                     log.Write("printing to pdf...");
                     PrintPDF("HPAB4538 (HP DeskJet 3700 series)", "Letter", filename);
                     log.Write("marking email as read...");
@@ -155,8 +156,27 @@ namespace PrintAutomation
             }
         }
 
-        public static void SavePdfToDisk(string filename, string attachmentData)
+        public static string SavePdfToDisk(string filename, string attachmentData)
         {
+            var dir = Path.GetDirectoryName(filename);
+            var ext = Path.GetExtension(filename);
+            var baseName = Path.GetFileNameWithoutExtension(filename);
+
+            var newName = filename;
+            var exists = File.Exists(filename);
+            var i = 1;
+            while (exists)
+            {
+                newName = dir + "\\" + baseName + "(" + i + ")" + ext;
+                exists = File.Exists(newName);
+                i++;
+            }
+
+            // save newlyCalculated save
+            if (!filename.Equals(newName))
+            {
+                filename = newName;
+            }
             // Convert the attachment data from base64url to byte array
             byte[] convertedByteArray = Convert.FromBase64String(attachmentData.Replace('-', '+').Replace('_', '/'));
 
@@ -165,6 +185,7 @@ namespace PrintAutomation
             {
                 stream.Write(convertedByteArray, 0, convertedByteArray.Length);
             }
+            return filename;
         }
 
         public static bool PrintPDF(string printer, string paperName, string filename)
