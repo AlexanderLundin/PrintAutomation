@@ -25,29 +25,41 @@ namespace PrintAutomation
         // Define the scope for Gmail API
         static string[] Scopes = { GmailService.Scope.GmailModify };
         static string ApplicationName = "PrintAutomationClient";
+        static TextFileLog log = new TextFileLog();
 
         static async Task Main(string[] args)
         {
-            //MessageBox.Show("main started");
-
-            GmailService service = await GetNewTokenWithUserInput();
-
-            // Set up the query parameters to search for PDF attachments
-            UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
-            //build query
-            var query = new List<string>();
-            query.Add("is:unread");
-            query.Add("subject:\"print\"");
-            query.Add("has:attachment filename:pdf");
-            string q = string.Join(" ", query);
-            request.Q = q;
-            request.MaxResults = 10;
-
-            // Retrieve the emails matching the query
-            ListMessagesResponse response = request.Execute();
-            if (response != null && response.Messages != null)
+            try
             {
-                ProcessEmails(service, response);
+                //MessageBox.Show("main started");
+                var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                var logPath = exeDir + "\\" + "PrintLog.txt";
+                log = new TextFileLog(logPath);
+                log.Write("Program started.");
+
+                GmailService service = await GetNewTokenWithUserInput();
+
+                // Set up the query parameters to search for PDF attachments
+                UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
+                //build query
+                var query = new List<string>();
+                query.Add("is:unread");
+                query.Add("subject:\"print\"");
+                query.Add("has:attachment filename:pdf");
+                string q = string.Join(" ", query);
+                request.Q = q;
+                request.MaxResults = 10;
+
+                // Retrieve the emails matching the query
+                ListMessagesResponse response = request.Execute();
+                if (response != null && response.Messages != null)
+                {
+                    ProcessEmails(service, response);
+                }
+                log.Write("Program completed.");
+            }catch(Exception ex)
+            {
+                log.Exception(ex);
             }
 
         }
@@ -186,8 +198,9 @@ namespace PrintAutomation
                 }
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                log.Exception(ex);
                 return false;
             }
         }
