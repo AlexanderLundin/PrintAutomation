@@ -84,13 +84,16 @@ namespace PrintAutomation
             if (credential.Token.IsExpired(credential.Flow.Clock))
             {
                 log.Write("credential expired, delete token.json and run again to get new token (requires user input).");
+                //https://stackoverflow.com/questions/71777420/i-want-to-use-google-api-refresh-tokens-forever
+                //If your app is in testing set it to production and your refresh token will stop expiring.
+                //always refresh the auth
+                if (true)
+                {
+                    await credential.RefreshTokenAsync(CancellationToken.None);
+                }
             }
 
-            //always refresh the auth
-            if (true)
-            {
-                await credential.RefreshTokenAsync(CancellationToken.None);
-            }
+
                 
 
             // Create the Gmail API service
