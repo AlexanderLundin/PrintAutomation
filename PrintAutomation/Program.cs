@@ -87,14 +87,14 @@ namespace PrintAutomation
                 //https://stackoverflow.com/questions/71777420/i-want-to-use-google-api-refresh-tokens-forever
                 //If your app is in testing set it to production and your refresh token will stop expiring.
                 //always refresh the auth
-                if (true)
-                {
-                    await credential.RefreshTokenAsync(CancellationToken.None);
-                }
+
             }
 
+            if (true)
+            {
+                await credential.RefreshTokenAsync(CancellationToken.None);
+            }
 
-                
 
             // Create the Gmail API service
             var service = new GmailService(new BaseClientService.Initializer()
