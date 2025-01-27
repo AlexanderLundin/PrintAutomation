@@ -41,7 +41,7 @@ namespace PrintAutomation
 
                 // Set up the query parameters to search for PDF attachments
                 UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
-                ProcessEmailsToPrint(service, request);
+                ProcessEmailsToPrintWithPdfAttachment(service, request);
                 log.Write("Program completed.");
             }
             catch (Exception ex)
@@ -51,10 +51,10 @@ namespace PrintAutomation
 
         }
 
-        private static void ProcessEmailsToPrint(GmailService service, UsersResource.MessagesResource.ListRequest request)
+        private static void ProcessEmailsToPrintWithPdfAttachment(GmailService service, UsersResource.MessagesResource.ListRequest request)
         {
             //build query
-            string q = GetEmailsToPrintQuery();
+            string q = GetEmailsWithPdfsToPrintQuery();
             request.Q = q;
             request.MaxResults = 10;
 
@@ -67,7 +67,7 @@ namespace PrintAutomation
             }
         }
 
-        private static string GetEmailsToPrintQuery()
+        private static string GetEmailsWithPdfsToPrintQuery()
         {
             var query = new List<string>();
             query.Add("is:unread");
