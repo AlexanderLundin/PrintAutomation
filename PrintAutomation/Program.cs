@@ -42,6 +42,7 @@ namespace PrintAutomation
                 // Set up the query parameters to search for PDF attachments
                 UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
                 ProcessEmailsToPrintWithPdfAttachment(service, request);
+                ProcessEmailsToPrintWithZInSubject(service, request);
                 log.Write("Program completed.");
             }
             catch (Exception ex)
@@ -73,6 +74,30 @@ namespace PrintAutomation
             query.Add("is:unread");
             query.Add("subject:\"print\"");
             query.Add("has:attachment filename:pdf");
+            string q = string.Join(" ", query);
+            return q;
+        }
+
+
+        private static void ProcessEmailsToPrintWithZInSubject(GmailService service, UsersResource.MessagesResource.ListRequest request)
+        {
+            string q = GetEmailsEmailsToPrintWithZInSubject();
+            request.Q = q;
+            request.MaxResults = 10;
+
+            ListMessagesResponse response = request.Execute();
+            if (response != null && response.Messages != null)
+            {
+                log.Write("found emails with z in subject to print.");
+                ProcessEmails(service, response);
+            }
+        }
+
+        private static string GetEmailsEmailsToPrintWithZInSubject()
+        {
+            var query = new List<string>();
+            query.Add("is:unread");
+            query.Add("subject:\"z\"");
             string q = string.Join(" ", query);
             return q;
         }
