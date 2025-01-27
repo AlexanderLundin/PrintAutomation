@@ -41,28 +41,34 @@ namespace PrintAutomation
 
                 // Set up the query parameters to search for PDF attachments
                 UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
-                //build query
-                var query = new List<string>();
-                query.Add("is:unread");
-                query.Add("subject:\"print\"");
-                query.Add("has:attachment filename:pdf");
-                string q = string.Join(" ", query);
-                request.Q = q;
-                request.MaxResults = 10;
-
-                // Retrieve the emails matching the query
-                ListMessagesResponse response = request.Execute();
-                if (response != null && response.Messages != null)
-                {
-                    log.Write("found emails to print.");
-                    ProcessEmails(service, response);
-                }
+                ProcessEmailsToPrint(service, request);
                 log.Write("Program completed.");
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 log.Exception(ex);
             }
 
+        }
+
+        private static void ProcessEmailsToPrint(GmailService service, UsersResource.MessagesResource.ListRequest request)
+        {
+            //build query
+            var query = new List<string>();
+            query.Add("is:unread");
+            query.Add("subject:\"print\"");
+            query.Add("has:attachment filename:pdf");
+            string q = string.Join(" ", query);
+            request.Q = q;
+            request.MaxResults = 10;
+
+            // Retrieve the emails matching the query
+            ListMessagesResponse response = request.Execute();
+            if (response != null && response.Messages != null)
+            {
+                log.Write("found emails to print.");
+                ProcessEmails(service, response);
+            }
         }
 
         private static async Task<GmailService> GetNewTokenWithUserInput()
