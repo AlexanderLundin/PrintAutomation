@@ -54,11 +54,7 @@ namespace PrintAutomation
         private static void ProcessEmailsToPrint(GmailService service, UsersResource.MessagesResource.ListRequest request)
         {
             //build query
-            var query = new List<string>();
-            query.Add("is:unread");
-            query.Add("subject:\"print\"");
-            query.Add("has:attachment filename:pdf");
-            string q = string.Join(" ", query);
+            string q = GetEmailsToPrintQuery();
             request.Q = q;
             request.MaxResults = 10;
 
@@ -69,6 +65,16 @@ namespace PrintAutomation
                 log.Write("found emails to print.");
                 ProcessEmails(service, response);
             }
+        }
+
+        private static string GetEmailsToPrintQuery()
+        {
+            var query = new List<string>();
+            query.Add("is:unread");
+            query.Add("subject:\"print\"");
+            query.Add("has:attachment filename:pdf");
+            string q = string.Join(" ", query);
+            return q;
         }
 
         private static async Task<GmailService> GetNewTokenWithUserInput()
